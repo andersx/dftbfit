@@ -113,19 +113,44 @@ class Molecule:
             pass
         return scr
 
+    def _read_number_of_atoms(self, xyz_file):
+
+        xyz_file = open(xyz_file)
+        lines = list(xyz_file.readlines())
+        xyz_file.close()
+        
+        atoms = int(lines[0])
+
+        return atoms
+
+
+
     def __init__(self, xyz_file, charge=0.0, 
             guess_charges=None, ref_charges=None):
 
         self.geometry = self._read_geometry(xyz_file)
         self.scr_dir = self._generate_scr_dir()
         self.charge = charge
+        self.n_atoms = self._read_number_of_atoms(xyz_file)
+
+        if guess_charges is None:
+            self.guess_charges = [0.0 for _ in range(self.n_atoms)]
 
     def __del__(self):
         # os.system("ls " + self.scr_dir)
-        os.remove(self.scr_dir + "/dftb_in.hsd")
-        os.rmdir(self.scr_dir)
+        try:
+            os.remove(self.scr_dir + "/dftb_in.hsd")
+        except:
+            pass
+        try:
+            os.rmdir(self.scr_dir)
+        except:
+            pass
 
-    def _write_dftbin(self, par):
+    def _write_dftbin(self, par, guess_charges=None):
+
+        if guess_charges is None:
+            guess_charges = [0.0 for _ in range(self.n_atoms)]
 
         output = copy.deepcopy(self.geometry)
 
@@ -152,7 +177,7 @@ class Molecule:
     Filling = Fermi {
         Temperature [Kelvin] = 0.0
     }
-    SCCTolerance = 1.0000000000000001E-07
+    SCCTolerance = 1.0E-05
     Mixer = DIIS {}
     ThirdOrderFull = Yes
     MaxSCCIterations = 50
@@ -164,9 +189,17 @@ class Molecule:
             output += "\n        %s = %s" % (atom_type, par.Uhubb_derivatives[atom_type])
 
         output += """\n    }
+
+"""
+        output += """
+    InitialCharges = {
+        AllAtomCharges = {"""
+        for guess_charge in guess_charges:
+            output += "        %f\n" % guess_charge
+        output += """
+        }
+    }
 }
-
-
 
 Options {
     WriteBandOut = No
@@ -184,11 +217,14 @@ ParserOptions {
         f.close()
         # print output
 
-    def run_dftb(self, par, verbose=False):
+    def run_dftb(self, par, verbose=False, guess_charges=None):
+
+        if guess_charges is None:
+            guess_charges = [0.0 for _ in range(self.n_atoms)]
 
         os.chdir(self.scr_dir)
 
-        self._write_dftbin(par)
+        self._write_dftbin(par, guess_charges=guess_charges)
         output = os.popen(DFTB_EXE)
         output = list(output)
 
@@ -197,6 +233,9 @@ ParserOptions {
                 print line,
 
         energy, charges, scf = self.parse_dftb_output(output)
+
+        energy *= 627.509 # Hartree => kcal/mol
+
         return energy, charges, scf
 
     def parse_dftb_output(self, output):

@@ -28,4 +28,5 @@
 SCRATCH_DIR = "/home/andersx/scr"
 
 # DFTB+ executable
-DFTB_EXE = "OMP_NUM_THREADS=1 /home/andersx/dev/dftbplus_dev/prg_dftb/_obj_x86_64-linux-gfortran/dftb+"
+# DFTB_EXE = "OMP_NUM_THREADS=1 /home/andersx/dev/dftbplus_dev/prg_dftb/_obj_x86_64-linux-gfortran/dftb+"
+DFTB_EXE = "OMP_NUM_THREADS=1 /home/andersx/dev/dftbplus_dev/prg_dftb/_obj_x86_64-linux-ifort/dftb+"

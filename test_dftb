@@ -27,6 +27,7 @@ import sys
 import numpy as np
 from dftbfit import ParameterSet
 from dftbfit import Molecule
+from dftbfit import DataSet
 
 if __name__ == "__main__":
 
@@ -44,26 +45,20 @@ if __name__ == "__main__":
     # par.set_zeta(zeta)
     # par.set_hubbard_derivative("H", Ud)
 
-    par.set_zeta(4.0)
+    par.set_zeta(3.5)
 
     error_min = 10000000000.0
+
+    charges = pbe[:] 
 
     for Uc in np.arange(0.2, 0.6, 0.02):
         par.set_hubbard("C", Uc)
 
-        for Un in np.arange(0.2, 0.6, 0.02):
-            par.set_hubbard("N", Un)
+        energy, charges, scf = mol.run_dftb(par, verbose=False, 
+                guess_charges = charges)
+        charges = np.array(charges)
 
-            energy, charges, scf = mol.run_dftb(par, verbose=False)
-            charges = np.array(charges)
+        error = np.sum(np.square(charges - pbe))
 
-            error = np.sum(np.square(charges - pbe))
-
-            print "%7.4f  %7.4f     %7.4f   %5i" % (Uc, Un, 
-                    error, scf), charges
-
-            if error < error_min:
-                print "Local minimum", Uc, Un
-                error_min = error
-
+        print error, scf
 
