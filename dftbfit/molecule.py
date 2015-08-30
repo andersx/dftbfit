@@ -178,7 +178,7 @@ class Molecule:
         Temperature [Kelvin] = 0.0
     }
     SCCTolerance = 1.0E-05
-    Mixer = DIIS {}
+    Mixer = Broyden {}
     ThirdOrderFull = Yes
     MaxSCCIterations = 50
     DampXH = Yes"""

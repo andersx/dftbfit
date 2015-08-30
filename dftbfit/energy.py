@@ -24,3 +24,57 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import cPickle
+import numpy as np
+
+class Energy:
+
+    def _load_pickle(self, filename):
+        f = open(filename,"rb")
+        p = cPickle.load(f)
+        f.close()
+
+        return p
+
+    def __init__(self, reference_pickle):
+
+        self.reference_data = self._load_pickle(reference_pickle)
+
+        # Hack to clean up pickle :(
+        for name in sorted(self.reference_data):
+            new_name = name.rstrip(".log").rstrip(".xyz")
+            self.reference_data[new_name] = self.reference_data[name]
+            del self.reference_data[name]
+
+
+    def calc_loglik(self, data, sigma=1.0, beta=1.0):
+
+        n = 0
+        chi_square = 0.0
+
+        for name in sorted(data):
+
+            mu = np.array(self.reference_data[name])
+            x = np.array(data[name])
+            try:
+                chi_square += np.sum(np.square(mu - x))
+            except:
+                print name, data[name]
+                return 100000.0, 0
+
+            n += int(len(x))
+
+        loglik = (n+1) * np.log(sigma) + chi_square / (2*sigma*sigma)
+            
+        rmsd = np.sqrt(chi_square/n)
+
+        return loglik, n, rmsd
+
+                
+
+if __name__ == "__main__":
+
+
+    energy = Energy("/home/andersx/projects/nbo_test/dftbfit/pickles/charges_gaussian.pickle")
+
+    print energy.calc_loglik("lal")

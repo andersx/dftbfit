@@ -28,6 +28,8 @@ import numpy as np
 from dftbfit import ParameterSet
 from dftbfit import Molecule
 from dftbfit import DataSet
+from dftbfit import Energy
+from dftbfit import Sampler
 
 if __name__ == "__main__":
 
@@ -35,27 +37,31 @@ if __name__ == "__main__":
 
     xyz_dir = sys.argv[1]
     par = ParameterSet("/home/andersx/projects/nbo_test/hubbard_fit/slko_3OB/")
-
     data = DataSet(xyz_dir)
+
+    sampler = Sampler(par)
+
+    prob = Energy("/home/andersx/projects/nbo_test/dftbfit/pickles/charges_gaussian.pickle")
+
     energy, charges, scf = data.run_all(par)
 
-    zeta = 4.0
+    e, n, rmsd = prob.calc_loglik(charges)
 
-    for name in sorted(energy):
-        print "%-30s   %3i" % (name, scf[name])
+    for i in range(1000000):
+        print " %6i    " % i,
+        par, chg = sampler.sample()
+        print "%-4s %5.2f       " % (par, chg),
 
-    for i in range(10):
+        energy, charges, scf = data.run_all(sampler.get_parameters())
+        e_new, n, rmsd = prob.calc_loglik(charges)
 
-        zeta = zeta - 0.1
-        par.set_zeta(zeta)
+        print " Enew = %-15.6f" % e_new, 
 
-        for name in sorted(energy):
+        if e_new < e:
+            e = e_new
+            print "Accept    Ecurr = %-15.6f    RMSD = %5.3f" % (e, rmsd)
+            sampler.iprint()
+        else:
+            sampler.reject()
+            print "Reject    Ecurr = %-15.6f    RMSD = %5.3f" % (e, rmsd)
 
-            if scf[name] > 50:
-                charges[name] = [0.0 for _ in range(data.molecules[name].n_atoms)]
-
-        energy, charges, scf = data.run_all(par, guess_charges=charges,
-                verbose=False)
-
-        for name in sorted(energy):
-            print "Stats: %2i  %-30s   %3i" % (i, name, scf[name])
