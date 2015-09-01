@@ -1,0 +1,17 @@
+------------------------------------------
+   6932     Uh    0.98         Enew = 13.389375       Reject    Ecurr = 13.346320          RMSD = 0.137
+   6933     Und   1.02         Enew = 13.346624       Reject    Ecurr = 13.346320          RMSD = 0.136
+   6934     Usd   1.00         Enew = 13.346320       Accept    Ecurr = 13.346320          RMSD = 0.136
+-- Current parameters --------------------
+Zeta:           2.0569
+Hubbard U:      0.2698
+Hubbard U:      0.2745
+Hubbard U:      0.3876
+Hubbard U:      0.3875
+Hubbard U:      0.4935
+Hubbard Ude:   -0.0001
+Hubbard Ude:   -0.0001
+Hubbard Ude:   -0.1059
+Hubbard Ude:   -0.0001
+Hubbard Ude:   -0.0000
+

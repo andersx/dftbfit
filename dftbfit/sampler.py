@@ -118,11 +118,10 @@ class Sampler:
         print "Zeta:          %7.4f" % self.par.zeta
 
         for a in ["H", "C", "N", "O", "S"]:
-
-            print "Hubbard U:     %7.4f" % self.par.Uhubbs[a]
+            print "Hubbard U: %-2s    %7.4f" % (a, self.par.Uhubbs[a])
 
         for a in ["H", "C", "N", "O", "S"]:
-            print "Hubbard Ude:   %7.4f" % self.par.Uhubb_derivatives[a]
+            print "Hubbard Ude: %-2s   %7.4f" % (a, self.par.Uhubb_derivatives[a])
         
         print "------------------------------------------"
 

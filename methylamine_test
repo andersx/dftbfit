@@ -39,27 +39,50 @@ if __name__ == "__main__":
     mol_c = Molecule("methylamine_xyz/13imidazoliummethylamine_c100.xyz",
             charge = 1.0)
 
+
+    mol_ac = Molecule("xyz_qcrna/122_ImidazoleH[+1].xyz",
+            charge = 1.0)
+    mol_bc = Molecule("xyz_qcrna/078_CH3NH2[0].xyz")
+
+
+
     par = ParameterSet("/home/andersx/projects/nbo_test/hubbard_fit/slko_3OB/")
 
-    pbe = np.array([0.351,  0.351,  0.195,  0.195,  0.167, -0.420, -0.838])
 
-    par.set_zeta(2.3)
-    # par.set_hubbard("C", 0.28)
-    # par.set_hubbard("N", 0.28)
+    pbe_a = np.array([ 0.268,  0.268,  0.455,  0.261,  0.455, -0.036, -0.036,  0.225, -0.430, -0.430])
+    pbe_b = np.array([ 0.351,  0.351,  0.195,  0.195,  0.167, -0.420, -0.838])
 
-    for Uc in np.arange(0.2, 0.6, 0.02):
-        par.set_hubbard("C", Uc)
+    par.set_zeta(2.0569)
+    par.set_hubbard("H", 0.2698)
+    par.set_hubbard("C", 0.2745)
+    par.set_hubbard("N", 0.3876)
+    par.set_hubbard_derivative("H", -0.0001)
+    par.set_hubbard_derivative("C", -0.0001)
+    par.set_hubbard_derivative("N", -0.1059)
 
-        for Un in np.arange(0.2, 0.6, 0.02):
-            par.set_hubbard("N", Un)
+    
+    a, charges, scf = mol_a.run_dftb(par, verbose=False)
 
-            a, charges, scf = mol_a.run_dftb(par, verbose=False)
-            if scf > 50: print "SCF ERROR", 
-            b, charges, scf = mol_b.run_dftb(par, verbose=False)
-            if scf > 50: print "SCF ERROR", 
-            c, charges, scf = mol_c.run_dftb(par, verbose=False)
-            if scf > 50: print "SCF ERROR", 
+    charges = np.array(charges)
+    print "DFTB3 ", charges, np.sum(charges)
+    print "PBE   ", pbe_a, np.sum(pbe_a)
+    print "DIFF  ", pbe_a - charges
 
-            print 25 + c - (b + a)
+
+    b, charges, scf = mol_bc.run_dftb(par, verbose=False)
+
+    charges = np.array(charges)
+    print "DFTB3 ", charges
+    print "PBE   ", pbe_b
+    print "DIFF  ", pbe_b - charges
+
+    a, charges, scf = mol_a.run_dftb(par, verbose=False)
+    b, charges, scf = mol_b.run_dftb(par, verbose=False)
+    c, charges, scf = mol_c.run_dftb(par, verbose=False)
+
+    print a        
+    print b        
+    print c
+    print 25 + c - (b + a)
 
 

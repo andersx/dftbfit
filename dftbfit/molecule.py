@@ -125,16 +125,12 @@ class Molecule:
 
 
 
-    def __init__(self, xyz_file, charge=0.0, 
-            guess_charges=None, ref_charges=None):
+    def __init__(self, xyz_file, charge=0.0):
 
         self.geometry = self._read_geometry(xyz_file)
         self.scr_dir = self._generate_scr_dir()
         self.charge = charge
         self.n_atoms = self._read_number_of_atoms(xyz_file)
-
-        if guess_charges is None:
-            self.guess_charges = [0.0 for _ in range(self.n_atoms)]
 
     def __del__(self):
         # os.system("ls " + self.scr_dir)
@@ -147,16 +143,16 @@ class Molecule:
         except:
             pass
 
-    def _write_dftbin(self, par, guess_charges=None):
+    def _write_dftbin(self, par, guess_charges=None, verbose=False):
 
-        if guess_charges is None:
-            guess_charges = [0.0 for _ in range(self.n_atoms)]
+        # if guess_charges is None:
+        #     guess_charges = [0.0 for _ in range(self.n_atoms)]
 
         output = copy.deepcopy(self.geometry)
 
 
         output += """\n\nHamiltonian = DFTB {
-    charge = """
+    Charge = """
         output += str(self.charge)
         output += """\n    SCC = Yes
     SlaterKosterFiles {"""
@@ -183,28 +179,29 @@ class Molecule:
     MaxSCCIterations = 50
     DampXH = Yes"""
         output += "\n    DampXHExponent = " + str(par.zeta)
-        output += """\n   HubbardDerivs = {
-"""
+        output += "\n    HubbardDerivs = {"
         for atom_type in self.atom_types:
             output += "\n        %s = %s" % (atom_type, par.Uhubb_derivatives[atom_type])
 
         output += """\n    }
 
 """
-        output += """
+        if guess_charges is not None:
+            output += """
     InitialCharges = {
         AllAtomCharges = {"""
-        for guess_charge in guess_charges:
-            output += "        %f\n" % guess_charge
-        output += """
+            for guess_charge in guess_charges:
+                output += "        %f\n" % guess_charge
+            output += """
         }
-    }
+    }"""
+        output += """
 }
 
 Options {
     WriteBandOut = No
     WriteDetailedOut = No
-    }
+}
 
 ParserOptions {
     ParserVersion = 4
@@ -215,16 +212,14 @@ ParserOptions {
         f = open("dftb_in.hsd", "w")
         f.write(output)
         f.close()
-        # print output
+        if verbose:
+            print output
 
     def run_dftb(self, par, verbose=False, guess_charges=None):
 
-        if guess_charges is None:
-            guess_charges = [0.0 for _ in range(self.n_atoms)]
-
         os.chdir(self.scr_dir)
 
-        self._write_dftbin(par, guess_charges=guess_charges)
+        self._write_dftbin(par, guess_charges=guess_charges, verbose=verbose)
         output = os.popen(DFTB_EXE)
         output = list(output)
 
